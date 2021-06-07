@@ -11,8 +11,8 @@ infix 7 <.>
 data RootFinder
     = RootFinder
         { nameOfTheCaller :: String
-        , initialGuessOfTheRoot :: Double
         , leftBoundOfTheRoot :: Double
+        , initialGuessOfTheRoot :: Double
         , rightBoundOfTheRoot :: Double
         , theFunctionWithZeroValueAtTheRoot :: Double -> Double
         }
