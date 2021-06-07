@@ -4,16 +4,32 @@ import Control.Monad
 import Data.Monoid
 import Data.Ratio
 import Numeric.RootFinding
+import System.IO
 
 infix 7 <.>
+
+data RootFinder
+    = RootFinder
+        { nameOfTheCaller :: String
+        , initialGuessOfTheRoot :: Double
+        , leftBoundOfTheRoot :: Double
+        , rightBoundOfTheRoot :: Double
+        , theFunctionWithZeroValueAtTheRoot :: Double -> Double
+        }
+    deriving ()
 
 at :: [a] -> Int -> a
 list `at` index
     | index >= 1
     = case drop (index - 1) list of
-        [] -> error ("In `at': (" ++ show index ++ ")-is-out-of-range")
+        [] -> error errmsg
         result : _ -> result
-    | otherwise = error ("In `at': (" ++ show index ++ ")-is-out-of-range")
+    | otherwise
+    = error errmsg
+    where
+        
+        errmsg :: String
+        errmsg = "In `at': index-is-out-of-range, index=" ++ show index ++ ", list-length=" ++ show (length list) ++ "."
 
 toDouble :: Integral a => a -> Double
 toDouble = fromInteger . toInteger
@@ -26,17 +42,24 @@ count = flip (curry (length . uncurry (filter . (==))))
 
 (<.>) :: Num a => [a] -> [a] -> a
 list1 <.> list2
-    | length list1 == length list2 = sum (zipWith (*) list1 list2)
-    | otherwise = error "In `(<.>)': different-lengthes"
+    | n1 == n2 = sum (zipWith (*) list1 list2)
+    | otherwise = error ("In `(<.>)': different-lengthes, left=" ++ show n1 ++ ", right=" ++ show n2 ++ ".")
+    where
+
+        n1 :: Int
+        n1 = length list1
+
+        n2 :: Int
+        n2 = length list2
 
 fractionalpart :: RealFrac a => a -> a
 fractionalpart x = x - fromInteger (floor x)
 
-findroot :: String -> Double -> Double -> Double -> (Double -> Double) -> Double
-findroot caller left_bound initial_guess right_bound function_with_zero_value_at_the_root
+runRootFinder :: RootFinder -> Double
+runRootFinder (RootFinder caller left_bound initial_guess right_bound function_with_zero_value_at_the_root)
     = case newtonRaphson param (left_bound, initial_guess, right_bound) (derive function_with_zero_value_at_the_root) of
-        NotBracketed -> error ("In `" ++ caller ++ "': not-bracketed")
-        SearchFailed -> error ("In `" ++ caller ++ "': search-failed")
+        NotBracketed -> error ("In `runRootFinder': not-bracketed, caller=" ++ show caller ++ ".")
+        SearchFailed -> error ("In `runRootFinder': search-failed, caller=" ++ show caller ++ ".")
         Root the_root -> the_root
     where
 
@@ -70,10 +93,10 @@ slope m
     = if [ e `at` i | i <- [length u + 2 .. 2 * length u + 2] ] < [0] ++ u
         then 1 % (length u + 1)
         else 1 % (length u + 2)
-    | is1st = (length u - count u 1 + 1) % (length u + 2)
-    | is2nd = (length qPal - count qPal 1 + 1) % (length qPal + 2)
-    | is3rd = (length pPal - count pPal 1 + 1) % (length pPal + 2)
-    | is4th = (length u - count u 1 + 1) % (length u + 2)
+    | is1stCase = (length u - count u 1 + 1) % (length u + 2)
+    | is2ndCase = (length qPal - count qPal 1 + 1) % (length qPal + 2)
+    | is3rdCase = (length pPal - count pPal 1 + 1) % (length pPal + 2)
+    | is4thCase = (length u - count u 1 + 1) % (length u + 2)
     where
 
         e :: [Int]
@@ -92,13 +115,13 @@ slope m
             digits = map (floor . px) (iterate t 1.0)
 
         u :: [Int]
-        u = palcalc (error "In `u': pal-binding-is-null") [e `at` 2] where
+        u = palcalc (error "In `u': pal-binding-is-null.") [e `at` 2] where
 
             paldef :: [Int] -> ([Int] -> [Int])
-            paldef l = foldr loop const [1 .. length l] [] where
+            paldef l = foldr go const [1 .. length l] [] where
 
-                loop :: Int -> ([Int] -> [Int] -> [Int]) -> [Int] -> ([Int] -> [Int])
-                loop i cont palpref = maybe (cont palpref) (const . join cont) (foldr changePal Nothing [1 .. length l0]) where
+                go :: Int -> ([Int] -> [Int] -> [Int]) -> [Int] -> ([Int] -> [Int])
+                go i cont palpref = maybe (cont palpref) (pure . join cont) (foldr changePal Nothing [1 .. length l0]) where
 
                     l0 :: [Int]
                     l0 = palpref ++ [l `at` i]
@@ -134,8 +157,8 @@ slope m
         qPal :: [Int]
         qPal = [ e `at` i | i <- [2 .. length u - modi + 1] ]
 
-        is1st :: Bool
-        is1st = or
+        is1stCase :: Bool
+        is1stCase = or
             [ and
                 [ [ e `at` i | i <- [length u + 2 .. length u + 3] ] == [0, 1]
                 , u ++ [0, 1] < [ e `at` i | i <- [length u + 4 .. 2 * length u + 5] ]
@@ -146,8 +169,8 @@ slope m
                 ]
             ]
 
-        is2nd :: Bool
-        is2nd = or
+        is2ndCase :: Bool
+        is2ndCase = or
             [ [ e `at` i | i <- [length u + 2 .. length u + 3] ] == [0, 0]
             , and 
                 [ [ e `at` i | i <- [length u + 2 .. length u + 3] ] == [0, 1]
@@ -155,8 +178,8 @@ slope m
                 ]
             ]
 
-        is3rd :: Bool
-        is3rd = or
+        is3rdCase :: Bool
+        is3rdCase = or
             [ [1, 1] <= [ e `at` i | i <- [length u + 2 .. length u + 3] ]
             , and
                 [ [ e `at` i | i <- [length u + 2 .. length u + 3] ] == [1, 0]
@@ -164,8 +187,8 @@ slope m
                 ]
             ]
 
-        is4th :: Bool
-        is4th = True
+        is4thCase :: Bool
+        is4thCase = True
 
 p :: Double -> Double
 p m = if m < mudm then ans1 else ans2 where
@@ -186,19 +209,46 @@ p m = if m < mudm then ans1 else ans2 where
     centralInv = [ ceiling (toDouble (b - a) / toDouble b * toDouble (n + 1)) - ceiling (toDouble (b - a) / toDouble b * toDouble n) | n <- [1 .. b - 2] ]
 
     beta :: Double
-    beta = findroot "beta" 1.0 2.5 3.0 (\x -> x^b - 2.0 * x^(b - 1) - [ toDouble c | c <- centralInv ] <.> [ x^(b - 2 - k) | k <- [1 .. b - 2] ])
+    beta = runRootFinder betaFinder where
+        
+        betaFinder :: RootFinder
+        betaFinder = RootFinder
+            { nameOfTheCaller = "beta"
+            , leftBoundOfTheRoot = 1.0
+            , initialGuessOfTheRoot = 2.5
+            , rightBoundOfTheRoot = 3.0
+            , theFunctionWithZeroValueAtTheRoot = (\x -> x^b - 2.0 * x^(b - 1) - [ toDouble c | c <- centralInv ] <.> [ x^(b - 2 - k) | k <- [1 .. b - 2] ])
+            }
 
     mudm :: Double
     mudm = (beta^b * (beta - 1.0)^2) / (beta^(b + 2) - 2.0 * beta^(b + 1) + 1.0)
 
     ans1 :: Double
-    ans1 = findroot "ans1" 1.0 2.5 3.0 (\x -> (m - 1.0) * x^b - m * x^(b - 1) - [ (m - 1.0) * toDouble c + 1.0 | c <- central ] <.> [ x^(b - 1 - k) | k <- [1 .. b - 2] ] - m)
+    ans1 = runRootFinder ans1Finder where
+        
+        ans1Finder :: RootFinder
+        ans1Finder = RootFinder 
+            { nameOfTheCaller = "ans1"
+            , leftBoundOfTheRoot = 1.0
+            , initialGuessOfTheRoot = 2.5
+            , rightBoundOfTheRoot = 3.0
+            , theFunctionWithZeroValueAtTheRoot = (\x -> (m - 1.0) * x^b - m * x^(b - 1) - [ (m - 1.0) * toDouble c + 1.0 | c <- central ] <.> [ x^(b - 1 - k) | k <- [1 .. b - 2] ] - m)
+            }
 
     ans2 :: Double
-    ans2 = findroot "ans2" 1.0 2.5 3.0 (\x -> x^b - [ (m - 1.0) * toDouble c | c <- centralInv ] <.> [ x^(b - k) | k <- [1 .. b - 2] ] - m)
+    ans2 = runRootFinder ans2Finder where
+        
+        ans2Finder :: RootFinder
+        ans2Finder = RootFinder 
+            { nameOfTheCaller = "ans2"
+            , leftBoundOfTheRoot = 1.0
+            , initialGuessOfTheRoot = 2.5
+            , rightBoundOfTheRoot = 3.0
+            , theFunctionWithZeroValueAtTheRoot = (\x -> x^b - [ (m - 1.0) * toDouble c | c <- centralInv ] <.> [ x^(b - k) | k <- [1 .. b - 2] ] - m)
+            }
 
-main :: IO ()
-main = test where
+test :: IO ()
+test = go where
 
     concatShowS :: [ShowS] -> ShowS
     concatShowS = appEndo . mconcat . map Endo
@@ -223,13 +273,49 @@ main = test where
         , (10.0, 2.04794) 
         ]
 
-    test :: IO ()
-    test = do
+    go :: IO ()
+    go = do
         let putShowS s = putStrLn (s "")
         mapM putShowS testresults
         return ()
 
-{- stdout:
+main :: IO ()
+main = putStrLn greeting *> repl where
+
+    greeting :: String
+    greeting = concat
+        [ "Welcome to PCalc (version 1.0.0)\n"
+        , "Copyright (C) 2021 KiJeong Lim\n"
+        , "PCalc comes with ABSOLUTELY NO WARRANTY.\n"
+        , "This is free software.\n"
+        ]
+
+    putShowS :: ShowS -> IO ()
+    putShowS s = putStrLn (s "")
+
+    putstr :: String -> IO ()
+    putstr str = putStr str *> hFlush stdout
+
+    askMore :: IO Bool
+    askMore = do
+        putstr "Compute more? [Y/n] "
+        str <- getLine
+        case str of
+            "Y" -> return True
+            "n" -> return False
+            _ -> askMore
+
+    repl :: IO ()
+    repl = do
+        putstr "Enter m: " 
+        str <- getLine
+        let m = read str
+            pm = p m
+        putShowS (pm `seq` (showString ">>> p(" . shows m . showString ") = " . shows pm))
+        more <- askMore
+        if more then repl else return ()
+
+{- test:
 #1
 Mathematica> p(6.0) = 2.06341
 Haskell>     p(6.0) = 2.06341
