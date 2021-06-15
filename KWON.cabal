@@ -6,5 +6,5 @@ build-type: Simple
 cabal-version: >= 1.10
 executable PCalc
     default-language: Haskell2010
-    build-depends: base >= 4.7 && < 5, containers >= 0.6, transformers >= 0.5, math-functions >= 0.3.4
+    build-depends: base >= 4.7 && < 5, transformers >= 0.5, math-functions >= 0.3.4
     main-is: PCalc.hs

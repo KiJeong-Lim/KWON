@@ -1,12 +1,14 @@
 module Main where
 
 import Control.Monad
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.State.Strict
 import Data.Monoid
 import Data.Ratio
 import Numeric.RootFinding
 import System.IO
 
-infix 7 <.>
+infix 7 <.> -- dot-product operator
 
 data RootFinder
     = RootFinder
@@ -19,6 +21,10 @@ data RootFinder
     deriving ()
 
 at :: [a] -> Int -> a
+{- Note
+description: indexing function
+examples: [1, 2, 3, 4] `at` 2 == 2
+-}
 list `at` index
     | index >= 1
     = case drop (index - 1) list of
@@ -32,15 +38,35 @@ list `at` index
         errmsg = "In `at': index-is-out-of-range, index=" ++ show index ++ ", list-length=" ++ show (length list) ++ "."
 
 toDouble :: Integral a => a -> Double
+{- Note
+description: casting into Double.
+example:
+    toDouble 2 == 2.0
+-}
 toDouble = fromInteger . toInteger
 
 isPalindrome :: Eq a => [a] -> Bool
+{- Note
+description: check the first input is palindrome
+example:
+    isPalindrome [1, 2, 1] == True
+-}
 isPalindrome list = list == reverse list
 
 count :: Eq a => [a] -> a -> Int
-count = flip (curry (length . uncurry (filter . (==))))
+{- Note
+description: count how many the second input occurs in the first input.
+example:
+    count [1, 2, 2, 1, 2] 2 == 3
+-}
+count xs x0 = length (filter (\x -> x == x0) xs)
 
 (<.>) :: Num a => [a] -> [a] -> a
+{- Note
+description: dot-product
+example:
+    [x1, x2, x3] <.> [y1, y2, y3] == x1 * y1 + x2 * y2 + x3 * y3
+-}
 list1 <.> list2
     | n1 == n2 = sum (zipWith (*) list1 list2)
     | otherwise = error ("In `(<.>)': different-lengthes, left=" ++ show n1 ++ ", right=" ++ show n2 ++ ".")
