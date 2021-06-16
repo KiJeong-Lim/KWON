@@ -14,7 +14,7 @@ main :: IO ()
 main = repl where
     repl :: IO ()
     repl = do
-        jsstr <- input (toJSString "Enter m:") (toJSString "")
+        jsstr <- input (toJSString "Enter m:") (toJSString "Enter m")
         jsbool <- quest (toJSString ("p(m) = " ++ show (p (read (fromJSString jsstr))) ++ "; Compute more?"))
         case jsonFromJSVal jsbool of
             Left str -> error str
