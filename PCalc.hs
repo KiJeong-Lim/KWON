@@ -1,4 +1,4 @@
-module Main where
+module PCalc where
 
 import Control.Monad
 import Data.Monoid
@@ -278,42 +278,6 @@ test = go where
         let putShowS s = putStrLn (s "")
         mapM putShowS testresults
         return ()
-
-main :: IO ()
-main = putStrLn greeting *> repl where
-
-    greeting :: String
-    greeting = concat
-        [ "Welcome to PCalc (version 1.0.0)\n"
-        , "Copyright (C) 2021 KiJeong Lim\n"
-        , "PCalc comes with ABSOLUTELY NO WARRANTY.\n"
-        , "This is free software.\n"
-        ]
-
-    putShowS :: ShowS -> IO ()
-    putShowS s = putStrLn (s "")
-
-    putstr :: String -> IO ()
-    putstr str = putStr str *> hFlush stdout
-
-    askMore :: IO Bool
-    askMore = do
-        putstr "Compute more? [Y/n] "
-        str <- getLine
-        case str of
-            "Y" -> return True
-            "n" -> return False
-            _ -> askMore
-
-    repl :: IO ()
-    repl = do
-        putstr "Enter m: " 
-        str <- getLine
-        let m = read str
-            pm = p m
-        putShowS (pm `seq` (showString ">>> p(" . shows m . showString ") = " . shows pm))
-        more <- askMore
-        if more then repl else return ()
 
 {- test:
 #1
