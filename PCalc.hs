@@ -121,7 +121,7 @@ slope m
             paldef l = foldr go const [1 .. length l] [] where
 
                 go :: Int -> ([Int] -> [Int] -> [Int]) -> [Int] -> ([Int] -> [Int])
-                go i cont palpref = maybe (cont palpref) (pure . join cont) (foldr changePal Nothing [1 .. length l0]) where
+                go i kont palpref = maybe (kont palpref) (pure . join kont) (foldr changePal Nothing [1 .. length l0]) where
 
                     l0 :: [Int]
                     l0 = palpref ++ [l `at` i]
