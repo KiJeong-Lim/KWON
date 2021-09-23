@@ -10,7 +10,7 @@ infix 7 <.>
 
 data RootFinder
     = RootFinder
-        { nameOfTheCaller :: String
+        { nameOfTheRoot :: String
         , leftBoundOfTheRoot :: Double
         , initialGuessOfTheRoot :: Double
         , rightBoundOfTheRoot :: Double
@@ -56,10 +56,10 @@ fractionalpart :: RealFrac a => a -> a
 fractionalpart x = x - fromInteger (floor x)
 
 runRootFinder :: RootFinder -> Double
-runRootFinder (RootFinder caller left_bound initial_guess right_bound function_with_zero_value_at_the_root)
+runRootFinder (RootFinder root_name left_bound initial_guess right_bound function_with_zero_value_at_the_root)
     = case newtonRaphson param (left_bound, initial_guess, right_bound) (derive function_with_zero_value_at_the_root) of
-        NotBracketed -> error ("In `runRootFinder': not-bracketed, caller=" ++ show caller ++ ".")
-        SearchFailed -> error ("In `runRootFinder': search-failed, caller=" ++ show caller ++ ".")
+        NotBracketed -> error ("In `runRootFinder': not-bracketed, root.name =" ++ show root_name ++ ".")
+        SearchFailed -> error ("In `runRootFinder': search-failed, root.name =" ++ show root_name ++ ".")
         Root the_root -> the_root
     where
 
@@ -213,7 +213,7 @@ p m = if m < mudm then ans1 else ans2 where
         
         betaFinder :: RootFinder
         betaFinder = RootFinder
-            { nameOfTheCaller = "beta"
+            { nameOfTheRoot = "beta"
             , leftBoundOfTheRoot = 1.0
             , initialGuessOfTheRoot = 2.5
             , rightBoundOfTheRoot = 3.0
@@ -228,7 +228,7 @@ p m = if m < mudm then ans1 else ans2 where
         
         ans1Finder :: RootFinder
         ans1Finder = RootFinder 
-            { nameOfTheCaller = "ans1"
+            { nameOfTheRoot = "ans1"
             , leftBoundOfTheRoot = 1.0
             , initialGuessOfTheRoot = 2.5
             , rightBoundOfTheRoot = 3.0
@@ -240,21 +240,21 @@ p m = if m < mudm then ans1 else ans2 where
         
         ans2Finder :: RootFinder
         ans2Finder = RootFinder 
-            { nameOfTheCaller = "ans2"
+            { nameOfTheRoot = "ans2"
             , leftBoundOfTheRoot = 1.0
             , initialGuessOfTheRoot = 2.5
             , rightBoundOfTheRoot = 3.0
             , theFunctionWithZeroValueAtTheRoot = (\x -> x^b - [ (m - 1.0) * toDouble c | c <- centralInv ] <.> [ x^(b - k) | k <- [1 .. b - 2] ] - m)
             }
 
+showsp :: Double -> ShowS
+showsp m = shows (fromInteger (round (p m * 10.0^5)) / 10.0^5)
+
 test :: IO ()
 test = go where
 
     concatShowS :: [ShowS] -> ShowS
     concatShowS = appEndo . mconcat . map Endo
-
-    showsp :: Double -> ShowS
-    showsp m = shows (fromInteger (round (p m * 10.0^5)) / 10.0^5)
 
     runTest :: Int -> (Double, Double) -> ShowS
     runTest i (m, pm) = concatShowS
