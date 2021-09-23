@@ -29,7 +29,7 @@ list `at` index
     where
         
         errmsg :: String
-        errmsg = "In `at': index-is-out-of-range, index=" ++ show index ++ ", list-length=" ++ show (length list) ++ "."
+        errmsg = "In `at': index-is-out-of-range, index=" ++ shows index (", list-length=" ++ shows (length list) ".")
 
 toDouble :: Integral a => a -> Double
 toDouble = fromInteger . toInteger
@@ -43,7 +43,7 @@ count = flip (curry (length . uncurry (filter . (==))))
 (<.>) :: Num a => [a] -> [a] -> a
 list1 <.> list2
     | n1 == n2 = sum (zipWith (*) list1 list2)
-    | otherwise = error ("In `(<.>)': different-lengthes, left=" ++ show n1 ++ ", right=" ++ show n2 ++ ".")
+    | otherwise = error ("In `(<.>)': different-lengthes, left=" ++ shows n1 (", right=" ++ shows n2 "."))
     where
 
         n1 :: Int
@@ -57,9 +57,9 @@ fractionalpart x = x - fromInteger (floor x)
 
 runRootFinder :: RootFinder -> Double
 runRootFinder (RootFinder root_name left_bound initial_guess right_bound function_with_zero_value_at_the_root)
-    = case newtonRaphson param (left_bound, initial_guess, right_bound) (derive function_with_zero_value_at_the_root) of
-        NotBracketed -> error ("In `runRootFinder': not-bracketed, root.name =" ++ show root_name ++ ".")
-        SearchFailed -> error ("In `runRootFinder': search-failed, root.name =" ++ show root_name ++ ".")
+    = case newtonRaphson param (left_bound, initial_guess, right_bound) (yy' function_with_zero_value_at_the_root) of
+        NotBracketed -> error ("In `runRootFinder': not-bracketed, root.name=" ++ shows root_name ".")
+        SearchFailed -> error ("In `runRootFinder': search-failed, root.name=" ++ shows root_name ".")
         Root the_root -> the_root
     where
 
@@ -69,8 +69,8 @@ runRootFinder (RootFinder root_name left_bound initial_guess right_bound functio
             , newtonTol = AbsTol 1.0e-6
             }
 
-        derive :: (Double -> Double) -> Double -> (Double, Double)
-        derive f x = (y, y') where
+        yy' :: (Double -> Double) -> Double -> (Double, Double)
+        yy' f x = (y, y') where
 
             h :: Double
             h = 1.0e-3
@@ -188,7 +188,7 @@ slope m
             ]
 
         is4thCase :: Bool
-        is4thCase = True
+        is4thCase = otherwise
 
 p :: Double -> Double
 p m = if m < mudm then ans1 else ans2 where
