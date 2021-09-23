@@ -27,7 +27,7 @@ list `at` index
     | otherwise
     = error errmsg
     where
-        
+
         errmsg :: String
         errmsg = "In `at': index-is-out-of-range, index=" ++ shows index (", list-length=" ++ shows (length list) ".")
 
@@ -115,7 +115,7 @@ slope m
             digits = map (floor . px) (iterate t 1.0)
 
         u :: [Int]
-        u = palcalc (error "In `u': pal-binding-is-null.") [e `at` 2] where
+        u = palcalc (error "In `u': pal = undefined.") [e `at` 2] where
 
             paldef :: [Int] -> ([Int] -> [Int])
             paldef l = foldr go const [1 .. length l] [] where
