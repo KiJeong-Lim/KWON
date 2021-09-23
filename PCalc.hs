@@ -29,13 +29,13 @@ list `at` index
     where
 
         errmsg :: String
-        errmsg = "In `at': index-is-out-of-range, index=" ++ shows index (", list-length=" ++ shows (length list) ".")
+        errmsg = "In `at': index-is-out-of-range, index=" ++ shows index "."
 
 toDouble :: Integral a => a -> Double
 toDouble = fromInteger . toInteger
 
 isPalindrome :: Eq a => [a] -> Bool
-isPalindrome list = list == reverse list
+isPalindrome = (==) <*> reverse
 
 count :: Eq a => [a] -> a -> Int
 count = flip (curry (length . uncurry (filter . (==))))
@@ -43,7 +43,7 @@ count = flip (curry (length . uncurry (filter . (==))))
 (<.>) :: Num a => [a] -> [a] -> a
 list1 <.> list2
     | n1 == n2 = sum (zipWith (*) list1 list2)
-    | otherwise = error ("In `(<.>)': different-lengthes, left=" ++ shows n1 (", right=" ++ shows n2 "."))
+    | otherwise = error ("In `(<.>)': different-lengthes, left.length=" ++ shows n1 (", right.length=" ++ shows n2 "."))
     where
 
         n1 :: Int
@@ -115,7 +115,7 @@ slope m
             digits = map (floor . px) (iterate t 1.0)
 
         u :: [Int]
-        u = palcalc (error "In `u': pal = undefined.") [e `at` 2] where
+        u = palcalc (error "In `u': palcalc.pal=undefined.") [e `at` 2] where
 
             paldef :: [Int] -> ([Int] -> [Int])
             paldef l = foldr go const [1 .. length l] [] where
@@ -263,8 +263,8 @@ test = go where
         , showString "Haskell>     p(" . shows m . showString ") = " . showsp m . showChar '\n'
         ]
 
-    testresults :: [ShowS]
-    testresults = zipWith runTest [1 ..]
+    tests :: [ShowS]
+    tests = zipWith runTest [1 ..]
         [ ( 6.0, 2.06341)
         , ( 7.0, 2.02647)
         , ( 2.5, 2.27977)
@@ -273,10 +273,12 @@ test = go where
         , (10.0, 2.04794) 
         ]
 
+    putShowS :: ShowS -> IO ()
+    putShowS ss = putStrLn (ss ())
+
     go :: IO ()
     go = do
-        let putShowS s = putStrLn (s "")
-        mapM putShowS testresults
+        mapM putShowS tests
         return ()
 
 {- test:
